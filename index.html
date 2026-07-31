@@ -1,0 +1,1308 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GulTuvak — uy o'simliklariga g'amxo'rlik</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Work+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<!-- ============================================================
+     SUPABASE ULANDI — bu loyiha endi jonli (LIVE) rejimda ishlaydi.
+     Backend jadvallari va RLS siyosatlarini o'rnatish uchun
+     birga berilgan supabase_schema.sql faylini Supabase SQL
+     Editor'da ishga tushiring.
+     ============================================================ -->
+
+<style>
+  :root{
+    --moss-900:#182920;
+    --moss-700:#2c4735;
+    --sage-400:#8fae86;
+    --leaf-500:#5f8f4c;
+    --leaf-600:#4d7a3d;
+    --clay-500:#bd6a43;
+    --clay-600:#a55632;
+    --oat-50:#faf7ee;
+    --oat-100:#f2ecda;
+    --oat-200:#e7ddc0;
+    --ink-900:#1f2a1e;
+    --ink-600:#4c584a;
+    --white:#fffdf8;
+    --radius-lg:22px;
+    --radius-md:14px;
+    --radius-sm:8px;
+    --shadow-soft:0 10px 30px -12px rgba(24,41,32,0.25);
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  @media (prefers-reduced-motion: reduce){
+    html{scroll-behavior:auto;}
+    *{animation-duration:0.01ms !important; animation-iteration-count:1 !important; transition-duration:0.01ms !important;}
+  }
+  body{
+    margin:0;
+    background:var(--oat-100);
+    color:var(--ink-900);
+    font-family:'Work Sans', sans-serif;
+    line-height:1.5;
+  }
+  h1,h2,h3,h4{
+    font-family:'Fraunces', serif;
+    color:var(--moss-900);
+    margin:0 0 .4em 0;
+    letter-spacing:-0.01em;
+  }
+  .mono{font-family:'JetBrains Mono', monospace;}
+  a{color:inherit;}
+  button{font-family:inherit;}
+  img,svg{display:block;max-width:100%;}
+  .wrap{max-width:1180px; margin:0 auto; padding:0 24px;}
+  section{padding:88px 0;}
+  section:first-of-type{padding-top:0;}
+
+  :focus-visible{outline:3px solid var(--clay-500); outline-offset:3px; border-radius:4px;}
+
+  /* ---------- Header ---------- */
+  header{
+    position:sticky; top:0; z-index:50;
+    background:rgba(250,247,238,0.9);
+    backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--oat-200);
+  }
+  .nav{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:16px 24px; max-width:1180px; margin:0 auto;
+  }
+  .brand{
+    display:flex; align-items:center; gap:10px;
+    font-family:'Fraunces', serif; font-weight:700; font-size:1.35rem;
+    color:var(--moss-900);
+  }
+  .brand .pot{width:30px; height:30px;}
+  .navlinks{display:flex; gap:6px; list-style:none; margin:0; padding:0; flex-wrap:wrap; align-items:center;}
+  .navlinks a{
+    text-decoration:none; padding:9px 14px; border-radius:100px;
+    font-size:.92rem; font-weight:600; color:var(--ink-600);
+    transition:background .18s, color .18s;
+  }
+  .navlinks a:hover{background:var(--oat-200); color:var(--moss-900);}
+  .navlinks a.admin-link{display:none; color:var(--clay-600);}
+  .navlinks a.admin-link.show{display:inline-block;}
+  .demo-banner{
+    background:var(--clay-500); color:var(--white); font-size:.82rem;
+    text-align:center; padding:7px 10px; font-family:'JetBrains Mono',monospace;
+    letter-spacing:.02em;
+  }
+
+  /* ---------- Hamburger ---------- */
+  .hamburger{
+    display:none; flex-direction:column; justify-content:center; gap:5px;
+    width:40px; height:40px; border:1.5px solid var(--oat-200); background:var(--white);
+    border-radius:10px; cursor:pointer; padding:0;
+  }
+  .hamburger span{
+    display:block; width:18px; height:2px; background:var(--moss-900); margin:0 auto;
+    transition:transform .22s, opacity .22s;
+  }
+  .hamburger.open span:nth-child(1){transform:translateY(7px) rotate(45deg);}
+  .hamburger.open span:nth-child(2){opacity:0;}
+  .hamburger.open span:nth-child(3){transform:translateY(-7px) rotate(-45deg);}
+  .auth-slot{display:flex; align-items:center; gap:8px;}
+  .auth-name{font-size:.82rem; color:var(--ink-600); font-family:'JetBrains Mono',monospace;}
+
+  @media (max-width: 860px){
+    .hamburger{display:flex;}
+    .navlinks{
+      position:absolute; top:100%; left:0; right:0; background:var(--white);
+      flex-direction:column; align-items:stretch; gap:2px; padding:10px 16px 16px;
+      border-bottom:1px solid var(--oat-200); box-shadow:var(--shadow-soft);
+      max-height:0; overflow:hidden; transition:max-height .25s ease;
+    }
+    .navlinks.open{max-height:420px;}
+    .navlinks a{padding:12px 10px;}
+    .auth-slot{flex-direction:column; align-items:stretch; padding:10px 10px 0;}
+  }
+
+  /* ---------- Hero ---------- */
+  .hero{
+    padding:64px 0 40px;
+    display:grid; grid-template-columns:1.1fr .9fr; gap:48px; align-items:center;
+  }
+  .eyebrow{
+    display:inline-flex; align-items:center; gap:8px;
+    font-family:'JetBrains Mono',monospace; font-size:.78rem; letter-spacing:.06em;
+    text-transform:uppercase; color:var(--leaf-600); background:#e4ecdc;
+    padding:6px 12px; border-radius:100px; margin-bottom:18px;
+  }
+  .hero h1{font-size:clamp(2.3rem, 4vw, 3.4rem); line-height:1.05;}
+  .hero p.lead{font-size:1.12rem; color:var(--ink-600); max-width:46ch; margin:14px 0 30px;}
+  .hero-cta{display:flex; gap:12px; flex-wrap:wrap;}
+  .btn{
+    border:none; cursor:pointer; padding:14px 24px; border-radius:100px;
+    font-weight:600; font-size:.96rem; transition:transform .15s, box-shadow .15s;
+    display:inline-flex; align-items:center; gap:8px;
+  }
+  .btn:hover{transform:translateY(-2px);}
+  .btn-primary{background:var(--leaf-500); color:var(--white); box-shadow:var(--shadow-soft);}
+  .btn-primary:hover{background:var(--leaf-600);}
+  .btn-ghost{background:transparent; color:var(--moss-900); border:1.5px solid var(--moss-700);}
+  .btn-ghost:hover{background:var(--moss-900); color:var(--white);}
+  .btn-clay{background:var(--clay-500); color:var(--white);}
+  .btn-clay:hover{background:var(--clay-600);}
+  .btn-sm{padding:9px 16px; font-size:.85rem;}
+  .btn:disabled{opacity:.45; cursor:not-allowed; transform:none;}
+
+  .hero-stats{display:flex; gap:26px; margin-top:38px;}
+  .stat b{display:block; font-family:'Fraunces',serif; font-size:1.7rem; color:var(--moss-900);}
+  .stat span{font-size:.82rem; color:var(--ink-600);}
+
+  /* Signature growing plant illustration */
+  .pot-scene{position:relative; display:flex; justify-content:center;}
+  .grow-pot{width:100%; max-width:340px;}
+  .leaf-anim{transform-origin:bottom center; animation:sway 5s ease-in-out infinite;}
+  .leaf-anim.l2{animation-delay:.6s;}
+  .leaf-anim.l3{animation-delay:1.2s;}
+  @keyframes sway{
+    0%,100%{transform:rotate(-2.5deg);}
+    50%{transform:rotate(2.5deg);}
+  }
+  .grow-in{animation:growUp 1.1s cubic-bezier(.2,.9,.25,1) both;}
+  @keyframes growUp{
+    0%{transform:scaleY(.2); opacity:0;}
+    100%{transform:scaleY(1); opacity:1;}
+  }
+
+  /* ---------- Section headers ---------- */
+  .sec-head{max-width:640px; margin-bottom:36px;}
+  .sec-head .eyebrow{margin-bottom:12px;}
+  .sec-head p{color:var(--ink-600); font-size:1.02rem;}
+
+  /* ---------- Katalog ---------- */
+  .catalog-controls{
+    display:flex; gap:12px; flex-wrap:wrap; align-items:center; margin-bottom:28px;
+  }
+  .filter-pills{display:flex; gap:8px;}
+  .pill{
+    border:1.5px solid var(--oat-200); background:var(--white); cursor:pointer;
+    padding:9px 16px; border-radius:100px; font-weight:600; font-size:.85rem; color:var(--ink-600);
+  }
+  .pill.active{background:var(--moss-900); color:var(--white); border-color:var(--moss-900);}
+  .search-input{
+    flex:1; min-width:200px; padding:11px 16px; border-radius:100px;
+    border:1.5px solid var(--oat-200); font-size:.92rem; background:var(--white);
+  }
+  .search-input:focus{border-color:var(--leaf-500);}
+
+  .card-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:18px;}
+  .plant-card{
+    background:var(--white); border-radius:var(--radius-md); overflow:hidden;
+    border:1px solid var(--oat-200); display:flex; flex-direction:column;
+    transition:box-shadow .2s, transform .2s;
+  }
+  .plant-card:hover{box-shadow:var(--shadow-soft); transform:translateY(-3px);}
+  .plant-img{
+    height:120px; display:flex; align-items:center; justify-content:center; font-size:3rem;
+  }
+  .plant-body{padding:16px; display:flex; flex-direction:column; gap:8px; flex:1;}
+  .plant-tag{
+    align-self:flex-start; font-family:'JetBrains Mono',monospace; font-size:.68rem;
+    text-transform:uppercase; letter-spacing:.05em; padding:3px 9px; border-radius:100px;
+    background:var(--oat-100); color:var(--ink-600);
+  }
+  .plant-body h4{font-size:1.08rem; margin-bottom:0;}
+  .plant-body .meta{font-size:.83rem; color:var(--ink-600);}
+  .plant-body .meta b{color:var(--ink-900);}
+  .plant-foot{margin-top:auto; display:flex; justify-content:space-between; align-items:center; gap:8px;}
+  .details-toggle{
+    background:none; border:none; color:var(--leaf-600); font-weight:600; font-size:.82rem; cursor:pointer; padding:0;
+  }
+  .plant-extra{display:none; font-size:.83rem; color:var(--ink-600); border-top:1px dashed var(--oat-200); padding-top:8px; margin-top:2px;}
+  .plant-extra.open{display:block;}
+  .plant-extra p{margin:4px 0;}
+
+  /* ---------- Mening GulTuvagim ---------- */
+  .pot-section-inner{display:grid; grid-template-columns:1fr 1fr; gap:32px; align-items:start;}
+  .task-card{
+    background:var(--white); border-radius:var(--radius-lg); padding:22px;
+    border:1px solid var(--oat-200); box-shadow:var(--shadow-soft);
+  }
+  .empty-note{
+    background:var(--oat-50); border:1.5px dashed var(--oat-200); border-radius:var(--radius-md);
+    padding:24px; text-align:center; color:var(--ink-600); font-size:.92rem;
+  }
+  .my-plant-row{
+    display:flex; gap:14px; align-items:center; padding:14px 0; border-bottom:1px solid var(--oat-200);
+  }
+  .my-plant-row:last-child{border-bottom:none;}
+  .my-plant-emoji{
+    width:52px; height:52px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+    font-size:1.6rem; flex-shrink:0;
+  }
+  .my-plant-info{flex:1; min-width:0;}
+  .my-plant-info h5{margin:0 0 3px 0; font-size:.98rem; font-weight:700;}
+  .task-badges{display:flex; gap:6px; flex-wrap:wrap; margin-top:6px;}
+  .badge-task{
+    font-family:'JetBrains Mono',monospace; font-size:.7rem; padding:4px 9px; border-radius:100px;
+    display:inline-flex; align-items:center; gap:4px; cursor:pointer; border:none;
+  }
+  .badge-due{background:#f4e0d3; color:var(--clay-600);}
+  .badge-ok{background:#e2ecdb; color:var(--leaf-600);}
+  .remove-plant{background:none; border:none; color:#b1554a; font-size:1.15rem; cursor:pointer; line-height:1; padding:6px;}
+
+  .points-strip{display:flex; gap:18px; margin-top:16px; flex-wrap:wrap;}
+  .points-box{background:var(--oat-50); border-radius:var(--radius-md); padding:14px 18px; flex:1; min-width:120px;}
+  .points-box b{display:block; font-family:'Fraunces',serif; font-size:1.5rem; color:var(--leaf-600);}
+  .points-box span{font-size:.78rem; color:var(--ink-600);}
+
+  /* ---------- Reyting ---------- */
+  .leaderboard{background:var(--white); border-radius:var(--radius-lg); border:1px solid var(--oat-200); overflow:hidden;}
+  .lb-row{
+    display:flex; align-items:center; gap:14px; padding:14px 20px; border-bottom:1px solid var(--oat-100);
+  }
+  .lb-row:last-child{border-bottom:none;}
+  .lb-row.me{background:#eef4e7;}
+  .lb-rank{
+    width:32px; height:32px; border-radius:50%; background:var(--oat-100); color:var(--ink-600);
+    display:flex; align-items:center; justify-content:center; font-family:'JetBrains Mono',monospace; font-size:.8rem; font-weight:600; flex-shrink:0;
+  }
+  .lb-row:nth-child(1) .lb-rank{background:#e9c46a; color:#5c4200;}
+  .lb-row:nth-child(2) .lb-rank{background:#d8d8d8; color:#4a4a4a;}
+  .lb-row:nth-child(3) .lb-rank{background:#e0b088; color:#5c3a1e;}
+  .lb-name{flex:1; font-weight:600;}
+  .lb-pts{font-family:'JetBrains Mono',monospace; color:var(--leaf-600); font-weight:600;}
+
+  /* ---------- Bog'cha ---------- */
+  .post-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:18px;}
+  .post-card{background:var(--white); border-radius:var(--radius-md); border:1px solid var(--oat-200); overflow:hidden;}
+  .post-img{height:150px; display:flex; align-items:center; justify-content:center; font-size:3.4rem;}
+  .post-body{padding:16px;}
+  .post-user{font-weight:700; font-size:.9rem; margin-bottom:4px;}
+  .post-caption{font-size:.88rem; color:var(--ink-600); margin-bottom:10px;}
+  .post-comments{border-top:1px dashed var(--oat-200); padding-top:8px; font-size:.82rem; color:var(--ink-600);}
+  .post-comments .c{margin:4px 0;}
+  .add-comment{display:flex; gap:6px; margin-top:8px;}
+  .add-comment input{flex:1; padding:8px 12px; border-radius:100px; border:1.5px solid var(--oat-200); font-size:.8rem;}
+  .add-comment button{border:none; background:var(--moss-900); color:var(--white); border-radius:100px; padding:8px 14px; font-size:.78rem; cursor:pointer;}
+
+  .share-box{background:var(--white); border:1px dashed var(--oat-200); border-radius:var(--radius-md); padding:16px; margin-bottom:20px; display:flex; gap:10px; flex-wrap:wrap;}
+  .share-box input, .share-box textarea{
+    flex:1; min-width:180px; padding:10px 14px; border-radius:var(--radius-sm); border:1.5px solid var(--oat-200); font-family:inherit; font-size:.88rem;
+  }
+
+  /* ---------- Agroapteka ---------- */
+  .apteka-controls{display:flex; gap:10px; margin-bottom:22px; flex-wrap:wrap;}
+  select{
+    padding:10px 14px; border-radius:100px; border:1.5px solid var(--oat-200); background:var(--white); font-size:.88rem; font-family:inherit;
+  }
+  .apteka-list{display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:16px;}
+  .apteka-card{background:var(--white); border:1px solid var(--oat-200); border-radius:var(--radius-md); padding:18px;}
+  .apteka-card h5{margin:0 0 6px; font-size:1rem; color:var(--moss-900);}
+  .apteka-card p{margin:3px 0; font-size:.85rem; color:var(--ink-600);}
+  .apteka-tag{display:inline-block; font-family:'JetBrains Mono',monospace; font-size:.68rem; background:var(--oat-100); padding:2px 9px; border-radius:100px; margin-bottom:8px; color:var(--ink-600);}
+
+  /* ---------- Auth modal ---------- */
+  .modal-backdrop{
+    display:none; position:fixed; inset:0; background:rgba(24,41,32,0.55); z-index:200;
+    align-items:center; justify-content:center; padding:20px;
+  }
+  .modal-backdrop.open{display:flex;}
+  .modal-box{
+    background:var(--white); border-radius:var(--radius-lg); padding:28px; width:100%; max-width:380px;
+    box-shadow:var(--shadow-soft);
+  }
+  .modal-box h3{margin-bottom:6px;}
+  .modal-box p.sub{color:var(--ink-600); font-size:.86rem; margin-bottom:18px;}
+  .form-field{display:flex; flex-direction:column; gap:6px; margin-bottom:14px;}
+  .form-field label{font-size:.8rem; font-weight:600; color:var(--ink-600);}
+  .form-field input, .form-field select, .form-field textarea{
+    padding:10px 14px; border-radius:var(--radius-sm); border:1.5px solid var(--oat-200); font-family:inherit; font-size:.92rem;
+  }
+  .form-field textarea{resize:vertical; min-height:70px;}
+  .modal-actions{display:flex; gap:10px; margin-top:6px;}
+  .modal-close{background:none; border:none; float:right; font-size:1.2rem; cursor:pointer; color:var(--ink-600);}
+  .modal-switch{font-size:.83rem; color:var(--ink-600); margin-top:14px; text-align:center;}
+  .modal-switch a{color:var(--leaf-600); font-weight:600; cursor:pointer; text-decoration:underline;}
+  .form-error{color:var(--clay-600); font-size:.82rem; margin-top:-6px; margin-bottom:10px; display:none;}
+  .form-error.show{display:block;}
+
+  /* ---------- Admin panel ---------- */
+  .admin-gate{
+    background:var(--oat-50); border:1.5px dashed var(--oat-200); border-radius:var(--radius-md);
+    padding:28px; text-align:center; color:var(--ink-600);
+  }
+  .admin-grid{display:grid; grid-template-columns:1fr 1fr; gap:24px; align-items:start;}
+  .admin-card{background:var(--white); border:1px solid var(--oat-200); border-radius:var(--radius-lg); padding:22px; box-shadow:var(--shadow-soft);}
+  .admin-card h3{font-size:1.05rem; margin-bottom:14px;}
+  .admin-list{max-height:340px; overflow-y:auto; display:flex; flex-direction:column; gap:8px; margin-top:14px;}
+  .admin-row{
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+    background:var(--oat-50); border-radius:var(--radius-sm); padding:9px 12px; font-size:.85rem;
+  }
+  .admin-row .del-btn{background:none; border:none; color:#b1554a; cursor:pointer; font-size:1rem;}
+  .form-row2{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+  @media (max-width:860px){ .admin-grid{grid-template-columns:1fr;} }
+
+  footer{
+    background:var(--moss-900); color:var(--oat-100); padding:44px 0 28px; margin-top:40px;
+  }
+  footer .wrap{display:flex; justify-content:space-between; flex-wrap:wrap; gap:20px; align-items:center;}
+  footer p{margin:0; font-size:.85rem; opacity:.75;}
+  .toast{
+    position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(20px);
+    background:var(--moss-900); color:var(--white); padding:12px 22px; border-radius:100px;
+    font-size:.88rem; opacity:0; pointer-events:none; transition:opacity .25s, transform .25s; z-index:100;
+    box-shadow:var(--shadow-soft);
+  }
+  .toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
+
+  @media (max-width: 860px){
+    .hero{grid-template-columns:1fr;}
+    .pot-scene{order:-1;}
+    .pot-section-inner{grid-template-columns:1fr;}
+    .navlinks{display:none;}
+  }
+</style>
+</head>
+<body>
+
+<div class="demo-banner mono" id="statusBanner">🔌 Ulanmoqda...</div>
+
+<header>
+  <div class="nav">
+    <div class="brand">
+      <svg class="pot" viewBox="0 0 40 40" fill="none"><path d="M10 16h20l-2.5 18a3 3 0 0 1-3 2.6h-9a3 3 0 0 1-3-2.6L10 16Z" fill="#bd6a43"/><rect x="8" y="12" width="24" height="5" rx="2" fill="#a55632"/><path d="M20 14c-2-6 2-9 6-9-1 5-3 8-6 9Z" fill="#5f8f4c"/><path d="M20 14c1-7-4-10-8-9 1.5 5.5 4.5 8.5 8 9Z" fill="#7ba05b"/></svg>
+      GulTuvak
+    </div>
+    <ul class="navlinks" id="navLinks">
+      <li><a href="#katalog">Katalog</a></li>
+      <li><a href="#tuvagim">Mening tuvagim</a></li>
+      <li><a href="#reyting">Reyting</a></li>
+      <li><a href="#bogcha">Bog'cha</a></li>
+      <li><a href="#agroapteka">Agroapteka</a></li>
+      <li><a href="#admin" class="admin-link" id="adminLink">⚙️ Admin</a></li>
+      <li class="auth-slot" id="authSlot">
+        <button class="btn btn-ghost btn-sm" id="loginBtn" onclick="openAuthModal('login')">Kirish</button>
+      </li>
+    </ul>
+    <button class="hamburger" id="hamburgerBtn" aria-label="Menyu" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</header>
+
+<main>
+  <!-- HERO -->
+  <section class="hero wrap">
+    <div>
+      <span class="eyebrow">🌿 Uy o'simliklariga g'amxo'rlik</span>
+      <h1>Har bir tuvakda<br>bitta yashil hikoya</h1>
+      <p class="lead">GulTuvak — qaysi gul yoki ko'chatni qachon ekish, qanday parvarish qilish kerakligini aytib beradi va har kuni suv, oziqa, artish vaqtini eslatib turadi.</p>
+      <div class="hero-cta">
+        <button class="btn btn-primary" onclick="scrollToId('katalog')">Katalogni ko'rish</button>
+        <button class="btn btn-ghost" onclick="scrollToId('tuvagim')">Mening tuvagimni ochish</button>
+      </div>
+      <div class="hero-stats">
+        <div class="stat"><b>50</b><span>o'simlik turi</span></div>
+        <div class="stat"><b id="statPotCount">0</b><span>tuvagingizdagi o'simlik</span></div>
+        <div class="stat"><b id="statPoints">0</b><span>to'plangan ball</span></div>
+      </div>
+    </div>
+    <div class="pot-scene">
+      <svg class="grow-pot grow-in" viewBox="0 0 320 340" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <ellipse cx="160" cy="320" rx="90" ry="12" fill="#e7ddc0"/>
+        <path d="M90 190h140l-16 120a14 14 0 0 1-14 12h-80a14 14 0 0 1-14-12L90 190Z" fill="#bd6a43"/>
+        <path d="M90 190h140l-4 30H94l-4-30Z" fill="#a55632"/>
+        <rect x="80" y="172" width="160" height="26" rx="10" fill="#a55632"/>
+        <g class="leaf-anim l1">
+          <path d="M160 178C150 120 175 70 210 45c8 55-15 105-50 133Z" fill="#4d7a3d"/>
+        </g>
+        <g class="leaf-anim l2">
+          <path d="M160 178C168 115 140 68 100 48c-4 58 22 104 60 130Z" fill="#5f8f4c"/>
+        </g>
+        <g class="leaf-anim l3">
+          <path d="M160 178C158 100 172 55 200 20c15 50-5 100-40 158Z" fill="#7ba05b"/>
+        </g>
+        <circle cx="205" cy="55" r="9" fill="#e9c46a"/>
+        <circle cx="205" cy="55" r="4" fill="#bd6a43"/>
+      </svg>
+    </div>
+  </section>
+
+  <!-- KATALOG -->
+  <section id="katalog" class="wrap">
+    <div class="sec-head">
+      <span class="eyebrow">📖 Katalog</span>
+      <h2>30+ gul, 20+ ko'chat</h2>
+      <p>Har biri uchun ekish vaqti, sharoiti, foydasi va parvarish tartibi. Yoqqanini "Tuvakka qo'shish" tugmasi orqali o'zingizning GulTuvagingizga qo'shing.</p>
+    </div>
+    <div class="catalog-controls">
+      <div class="filter-pills">
+        <button class="pill active" data-filter="hammasi">Hammasi</button>
+        <button class="pill" data-filter="gul">Gullar</button>
+        <button class="pill" data-filter="kochat">Ko'chatlar</button>
+      </div>
+      <input type="text" class="search-input" id="searchInput" placeholder="Nomi bo'yicha qidirish...">
+    </div>
+    <div class="card-grid" id="catalogGrid"></div>
+  </section>
+
+  <!-- MENING GULTUVAGIM -->
+  <section id="tuvagim" class="wrap">
+    <div class="sec-head">
+      <span class="eyebrow">🪴 Mening GulTuvagim</span>
+      <h2>Bugungi vazifalar</h2>
+      <p>Tuvagingizga qo'shgan o'simliklar uchun kunlik suv, oziqa va artish eslatmalari shu yerda paydo bo'ladi.</p>
+    </div>
+    <div class="pot-section-inner">
+      <div class="task-card">
+        <h3 style="font-size:1.1rem;">Mening o'simliklarim</h3>
+        <div id="myPlantsList"></div>
+        <div class="points-strip">
+          <div class="points-box"><b id="ballCount">0</b><span>umumiy ball</span></div>
+          <div class="points-box"><b id="streakCount">0</b><span>kunlik faollik (bugun)</span></div>
+          <div class="points-box"><b id="dueCount">0</b><span>bugungi bajarilmagan vazifa</span></div>
+        </div>
+      </div>
+      <div>
+        <div class="task-card" style="background:var(--oat-50); box-shadow:none;">
+          <h4 style="font-size:1rem;">Qanday ishlaydi?</h4>
+          <p style="font-size:.88rem; color:var(--ink-600); margin:10px 0;">Har bir o'simlik uchun katalogdagi ma'lumot asosida suv quyish, oziqlantirish va barglarini artish oralig'i belgilanadi. Muddat kelganda vazifa "bajarilmagan" deb ko'rsatiladi — belgini bosib bajarilgan deb qayd eting va ball to'plang.</p>
+          <p style="font-size:.88rem; color:var(--ink-600);">💧 Suv &nbsp; 🌱 Oziqa &nbsp; 🧽 Artish — har biri uchun +5 ball.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- REYTING -->
+  <section id="reyting" class="wrap">
+    <div class="sec-head">
+      <span class="eyebrow">🏆 Reyting</span>
+      <h2>Eng faol bog'bonlar</h2>
+      <p>O'simlikka g'amxo'rlik qilib ball to'plagan foydalanuvchilar reytingi.</p>
+    </div>
+    <div class="leaderboard" id="leaderboard"></div>
+  </section>
+
+  <!-- BOG'CHA -->
+  <section id="bogcha" class="wrap">
+    <div class="sec-head">
+      <span class="eyebrow">🌻 Umumiy bog'cha</span>
+      <h2>Rasmlar va maslahatlar</h2>
+      <p>Foydalanuvchilar o'z o'simliklari haqida ulashadi, bir-biriga maslahat beradi.</p>
+    </div>
+    <div class="share-box">
+      <input type="text" id="postCaption" placeholder="O'simligingiz haqida qisqa post yozing...">
+      <button class="btn btn-clay btn-sm" onclick="addPost()">Ulashish</button>
+    </div>
+    <div class="post-grid" id="postGrid"></div>
+  </section>
+
+  <!-- AGROAPTEKA -->
+  <section id="agroapteka" class="wrap">
+    <div class="sec-head">
+      <span class="eyebrow">🧪 Agroapteka</span>
+      <h2>Hududingizdagi agroaptekalar</h2>
+      <p>O'simlik uchun urug', o'g'it yoki dorivor vositalar sotib olish mumkin bo'lgan yaqin nuqtalar.</p>
+    </div>
+    <div class="apteka-controls">
+      <select id="regionSelect" onchange="renderApteka()">
+        <option value="hammasi">Barcha hududlar</option>
+      </select>
+    </div>
+    <div class="apteka-list" id="aptekaGrid"></div>
+  </section>
+
+  <!-- ADMIN PANEL -->
+  <section id="admin" class="wrap">
+    <div class="sec-head">
+      <span class="eyebrow">⚙️ Admin</span>
+      <h2>Boshqaruv paneli</h2>
+      <p>Katalog, agroapteka va postlarni shu yerdan boshqaring. Faqat admin huquqiga ega foydalanuvchilarga ko'rinadi.</p>
+    </div>
+
+    <div class="admin-gate" id="adminGate">
+      🔒 Bu bo'lim faqat administratorlar uchun. <a style="color:var(--leaf-600); font-weight:600; cursor:pointer; text-decoration:underline;" onclick="openAuthModal('login')">Tizimga kiring</a>.
+    </div>
+
+    <div class="admin-grid" id="adminPanel" style="display:none;">
+      <div class="admin-card">
+        <h3>🌱 Yangi o'simlik qo'shish</h3>
+        <div class="form-field"><label>Nomi</label><input type="text" id="ap_name" placeholder="Masalan: Atirgul"></div>
+        <div class="form-row2">
+          <div class="form-field"><label>Turi</label>
+            <select id="ap_type"><option value="gul">Gul</option><option value="kochat">Ko'chat</option></select>
+          </div>
+          <div class="form-field"><label>Emoji</label><input type="text" id="ap_emoji" placeholder="🌹"></div>
+        </div>
+        <div class="form-field"><label>Ekish vaqti</label><input type="text" id="ap_ekish"></div>
+        <div class="form-field"><label>Sharoit</label><input type="text" id="ap_sharoit"></div>
+        <div class="form-field"><label>Foydasi</label><input type="text" id="ap_foyda"></div>
+        <div class="form-field"><label>Hosil/gullash</label><input type="text" id="ap_hosil"></div>
+        <div class="form-field"><label>Parvarish</label><input type="text" id="ap_parvarish"></div>
+        <div class="form-row2">
+          <div class="form-field"><label>Suv (kun)</label><input type="number" id="ap_suvkun" value="3"></div>
+          <div class="form-field"><label>Oziqa (kun)</label><input type="number" id="ap_oziqakun" value="14"></div>
+        </div>
+        <div class="form-field"><label>Artish (kun, 0 = kerak emas)</label><input type="number" id="ap_artishkun" value="0"></div>
+        <button class="btn btn-primary btn-sm" onclick="adminAddPlant()">Qo'shish</button>
+        <div class="admin-list" id="adminPlantList"></div>
+      </div>
+
+      <div class="admin-card">
+        <h3>🧪 Yangi agroapteka qo'shish</h3>
+        <div class="form-field"><label>Nomi</label><input type="text" id="aa_name"></div>
+        <div class="form-field"><label>Hudud</label><input type="text" id="aa_region"></div>
+        <div class="form-field"><label>Manzil</label><input type="text" id="aa_address"></div>
+        <div class="form-row2">
+          <div class="form-field"><label>Telefon</label><input type="text" id="aa_phone"></div>
+          <div class="form-field"><label>Ish vaqti</label><input type="text" id="aa_hours" placeholder="09:00–19:00"></div>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="adminAddApteka()">Qo'shish</button>
+        <div class="admin-list" id="adminAptekaList"></div>
+
+        <h3 style="margin-top:26px;">🌻 Bog'cha postlarini boshqarish</h3>
+        <div class="admin-list" id="adminPostList"></div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="brand" style="color:var(--oat-100);">🌿 GulTuvak</div>
+    <p>© 2026 GulTuvak — uyingizdagi har bir o'simlik uchun g'amxo'rlik yordamchisi.</p>
+  </div>
+</footer>
+
+<div class="toast" id="toast"></div>
+
+<!-- AUTH MODAL -->
+<div class="modal-backdrop" id="authModal">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeAuthModal()">✕</button>
+    <h3 id="authTitle">Tizimga kirish</h3>
+    <p class="sub" id="authSub">GulTuvagingizni saqlash uchun tizimga kiring.</p>
+    <div class="form-error" id="authError"></div>
+    <div class="form-field"><label>Email</label><input type="email" id="authEmail" placeholder="siz@misol.uz"></div>
+    <div class="form-field"><label>Parol</label><input type="password" id="authPassword" placeholder="Kamida 6 belgi"></div>
+    <div class="modal-actions">
+      <button class="btn btn-primary" style="flex:1;" id="authSubmitBtn" onclick="submitAuth()">Kirish</button>
+    </div>
+    <div class="modal-switch" id="authSwitch">
+      Hisobingiz yo'qmi? <a onclick="toggleAuthMode()">Ro'yxatdan o'tish</a>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ==========================================================================
+   SUPABASE CONFIG
+   ========================================================================== */
+const SUPABASE_CONFIG = {
+  url: "https://isfspwzhmdkuduvcegir.supabase.co",
+  anonKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlzZnNwd3pobWRrdWR1dmNlZ2lyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU0NjYwODcsImV4cCI6MjEwMTA0MjA4N30.2sLlIjJQ3K6F0KA7lavkbEEDis4dm5pqUtXy454AKIA"
+};
+const DEMO_MODE = !SUPABASE_CONFIG.url;
+const supabaseClient = supabase.createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.anonKey);
+
+let currentUser = null;    // { id, email }
+let currentProfile = null; // { id, email, is_admin, points }
+let authMode = 'login';    // 'login' | 'signup'
+
+/* ==========================================================================
+   1) KATALOG MA'LUMOTLARI (30 gul + 20 ko'chat)
+   suvKun / oziqaKun / artishKun — necha kunda bir marta bajarilishi kerak
+   ========================================================================== */
+let CATALOG = [
+  // ---- GULLAR (30) ----
+  {id:'g1', name:'Atirgul', type:'gul', emoji:'🌹', ekish:'Bahor (mart–aprel) yoki kuz (oktabr)', sharoit:'Kuchli quyosh, yaxshi drenajli tuproq', foyda:'Xushbo\'y, bezak va atir sanoatida ishlatiladi', hosil:'Ekilgandan 2–3 oyda gullaydi', parvarish:'Haftada 2 marta chuqur sug\'orish, oyiga 1 oziqlantirish', suvKun:3, oziqaKun:14, artishKun:10},
+  {id:'g2', name:'Lola', type:'gul', emoji:'🌷', ekish:'Kuzda (oktabr–noyabr) tugunak ekiladi', sharoit:'Salqin iqlim, quyoshli joy, quruq tuproq', foyda:'Bahorgi bezak, gulchilikda mashhur', hosil:'Bahorda (mart–aprel) gullaydi', parvarish:'Haftada 1 marta o\'rtacha sug\'orish', suvKun:5, oziqaKun:21, artishKun:14},
+  {id:'g3', name:'Binafsha', type:'gul', emoji:'💜', ekish:'Yil bo\'yi xonada, bahorda ochiq maydonda', sharoit:'Yorug\', lekin to\'g\'ridan-to\'g\'ri quyoshsiz joy', foyda:'Havoni tozalaydi, xushbo\'y hidli', hosil:'Ekilgandan 6–8 haftada gullaydi', parvarish:'Kam-kam, tuproq yuzasi qurigach sug\'orish', suvKun:4, oziqaKun:14, artishKun:7},
+  {id:'g4', name:'Xrizantema', type:'gul', emoji:'🌼', ekish:'Bahorda ko\'chat, kuzda gullaydi', sharoit:'Ochiq quyosh, unumdor tuproq', foyda:'Kuzgi bezak, uzoq gullaydi', hosil:'Kuzda (sentabr–noyabr) gullaydi', parvarish:'Haftada 2 marta sug\'orish, oyda 2 oziqa', suvKun:3, oziqaKun:15, artishKun:10},
+  {id:'g5', name:'Petuniya', type:'gul', emoji:'🌸', ekish:'Bahorda (aprel) ochiq yerga yoki gulqoqqa', sharoit:'To\'liq quyosh, muntazam sug\'orish', foyda:'Balkon va gulzorlar uchun rangbarang bezak', hosil:'Iyun–sentabr davomida uzluksiz gullaydi', parvarish:'Har kuni yengil sug\'orish, so\'ng gullarni tozalash', suvKun:1, oziqaKun:10, artishKun:7},
+  {id:'g6', name:'Begoniya', type:'gul', emoji:'🌺', ekish:'Bahorda xonada yoki soyabon joyga', sharoit:'Yorug\' soya, namlik yuqori', foyda:'Xona va ayvon bezagi, uzoq gullaydi', hosil:'Bahordan kuzgacha gullaydi', parvarish:'Haftada 2 marta, ortiqcha suvdan saqlanish', suvKun:3, oziqaKun:14, artishKun:10},
+  {id:'g7', name:'Geran (pelargoniya)', type:'gul', emoji:'🌺', ekish:'Bahorda ko\'chatdan, xona sharoitida yil bo\'yi', sharoit:'Yorug\' quyosh, o\'rtacha sug\'orish', foyda:'Hasharotlarni qaytaruvchi xususiyatga ega', hosil:'Bahordan kuzgacha davomiy gullaydi', parvarish:'Tuproq qurigach sug\'orish, quruq barglarni olib tashlash', suvKun:5, oziqaKun:21, artishKun:14},
+  {id:'g8', name:'Orxideya', type:'gul', emoji:'🌸', ekish:'Yil bo\'yi xona sharoitida', sharoit:'Yorug\', to\'g\'ridan-to\'g\'ri quyoshsiz, yuqori namlik', foyda:'Nafis xona bezagi, uzoq umr ko\'radi', hosil:'Gullash 2–3 oy davom etadi, yiliga 1–2 marta', parvarish:'Haftada 1 marta botirib sug\'orish, oyiga maxsus oziqa', suvKun:7, oziqaKun:30, artishKun:14},
+  {id:'g9', name:'Kalla liliya', type:'gul', emoji:'🤍', ekish:'Bahorda tugunak ekiladi', sharoit:'Nam tuproq, yarim soya', foyda:'To\'y buketlarida mashhur nafis gul', hosil:'Yozda (iyun–avgust) gullaydi', parvarish:'Haftada 2–3 marta sug\'orish, tuproqni doim nam ushlash', suvKun:2, oziqaKun:14, artishKun:10},
+  {id:'g10', name:'Gladiolus', type:'gul', emoji:'🌷', ekish:'Bahorda (aprel–may) tugunak ekiladi', sharoit:'To\'liq quyosh, yaxshi drenaj', foyda:'Baland poyali bezak guli, kesib qo\'yish uchun ideal', hosil:'Ekilgandan 70–90 kunda gullaydi', parvarish:'Haftada 2 marta sug\'orish, poyasini tayoqqa bog\'lash', suvKun:3, oziqaKun:14, artishKun:14},
+  {id:'g11', name:'Georgin (dalya)', type:'gul', emoji:'🌺', ekish:'Bahorda tugunak ekiladi', sharoit:'Quyoshli joy, unumdor tuproq', foyda:'Yirik va rangbarang gullari bilan bezak', hosil:'Iyuldan sovuq tushgunga qadar gullaydi', parvarish:'Haftada 2 marta chuqur sug\'orish', suvKun:3, oziqaKun:14, artishKun:10},
+  {id:'g12', name:'Romashka (marguaritka)', type:'gul', emoji:'🌼', ekish:'Bahorda urug\' yoki ko\'chat', sharoit:'To\'liq quyosh, o\'rtacha tuproq', foyda:'Dorivor xossaga ega, choy tayyorlashda ishlatiladi', hosil:'Yoz davomida uzluksiz gullaydi', parvarish:'Haftada 2 marta sug\'orish', suvKun:3, oziqaKun:18, artishKun:10},
+  {id:'g13', name:'Zambak (liliya)', type:'gul', emoji:'⚜️', ekish:'Kuzda yoki bahorda piyozcha ekiladi', sharoit:'Yorug\' joy, drenajli tuproq', foyda:'Xushbo\'y, bezak va marosim gullari', hosil:'Yozda (iyun–iyul) gullaydi', parvarish:'Haftada 1–2 marta sug\'orish', suvKun:4, oziqaKun:21, artishKun:14},
+  {id:'g14', name:'Astra', type:'gul', emoji:'🪻', ekish:'Bahorda urug\'dan', sharoit:'To\'liq quyosh, yengil tuproq', foyda:'Kuzgi bezak, uzoq saqlanadigan kesma gul', hosil:'Avgust–oktabrda gullaydi', parvarish:'Haftada 2 marta sug\'orish', suvKun:3, oziqaKun:14, artishKun:10},
+  {id:'g15', name:'Amarant (petushok)', type:'gul', emoji:'🌾', ekish:'Bahorda urug\'dan', sharoit:'Quyoshli, issiqsevar', foyda:'Yorqin rangli, quritilgan buketlar uchun', hosil:'Yozning o\'rtasida gullaydi', parvarish:'Haftada 1–2 marta sug\'orish', suvKun:4, oziqaKun:18, artishKun:14},
+  {id:'g16', name:'Qizg\'aldoq', type:'gul', emoji:'🌺', ekish:'Erta bahorda urug\' sepiladi', sharoit:'To\'liq quyosh, quruqroq tuproq', foyda:'Yovvoyi tabiiy bezak, urug\'i oshxonada ishlatiladi', hosil:'Bahor oxiri – yoz boshida gullaydi', parvarish:'Kam sug\'orish, ortiqcha nam zararli', suvKun:6, oziqaKun:21, artishKun:14},
+  {id:'g17', name:'Iris (kasatik)', type:'gul', emoji:'🪻', ekish:'Kuzda tuganak ildiz ekiladi', sharoit:'Quyoshli, drenajli tuproq', foyda:'Nafis bezak, ko\'p yillik o\'simlik', hosil:'Bahorda (may) gullaydi', parvarish:'Haftada 1 marta sug\'orish', suvKun:5, oziqaKun:21, artishKun:14},
+  {id:'g18', name:'Yasmin (jasmin)', type:'gul', emoji:'🤍', ekish:'Bahorda ko\'chat ekiladi', sharoit:'Yorug\' quyosh yoki yarim soya', foyda:'Kuchli xushbo\'y hid, choyga ishlatiladi', hosil:'Yozda gullaydi', parvarish:'Haftada 2 marta sug\'orish', suvKun:3, oziqaKun:18, artishKun:14},
+  {id:'g19', name:'Anemon', type:'gul', emoji:'🌸', ekish:'Kuzda tugunak ekiladi', sharoit:'Yarim soya, nam tuproq', foyda:'Nozik bezak guli, erta gullaydi', hosil:'Erta bahorda gullaydi', parvarish:'Haftada 2 marta sug\'orish', suvKun:3, oziqaKun:18, artishKun:14},
+  {id:'g20', name:'Primula', type:'gul', emoji:'🌼', ekish:'Erta bahorda ko\'chat', sharoit:'Yarim soya, salqin joy', foyda:'Eng erta gullovchi bahor guli', hosil:'Fevral–aprelda gullaydi', parvarish:'Tuproqni doim nam ushlash', suvKun:2, oziqaKun:14, artishKun:10},
+  {id:'g21', name:'Fialka (viola)', type:'gul', emoji:'💜', ekish:'Bahor yoki kuzda urug\'dan', sharoit:'Yorug\', salqin havo', foyda:'Bezak, ba\'zi turlari yeyiladigan', hosil:'Bahordan kuzgacha gullaydi', parvarish:'Haftada 2 marta sug\'orish', suvKun:3, oziqaKun:14, artishKun:10},
+  {id:'g22', name:'Gvozdika (mixak gul)', type:'gul', emoji:'🌸', ekish:'Bahorda ko\'chatdan', sharoit:'To\'liq quyosh, drenajli tuproq', foyda:'Uzoq saqlanadigan kesma gul', hosil:'Yozda gullaydi', parvarish:'Haftada 2 marta sug\'orish', suvKun:3, oziqaKun:18, artishKun:14},
+  {id:'g23', name:'Amaril', type:'gul', emoji:'🌺', ekish:'Kuzda piyozcha ekiladi', sharoit:'Yorug\' xona, iliq harorat', foyda:'Yirik, ta\'sirchan bezak guli', hosil:'Qishda yoki erta bahorda gullaydi', parvarish:'Haftada 1 marta sug\'orish', suvKun:6, oziqaKun:21, artishKun:14},
+  {id:'g24', name:'Gibiskus', type:'gul', emoji:'🌺', ekish:'Bahorda ko\'chat ekiladi', sharoit:'To\'liq quyosh, iliq iqlim', foyda:'Karkade choyi uchun gullari ishlatiladi', hosil:'Yoz bo\'yi uzluksiz gullaydi', parvarish:'Haftada 2–3 marta sug\'orish', suvKun:3, oziqaKun:14, artishKun:10},
+  {id:'g25', name:'Bugonviliya', type:'gul', emoji:'💗', ekish:'Bahorda ko\'chat ekiladi', sharoit:'To\'liq quyosh, issiqlik', foyda:'Devor va panjaralarni bezashda ishlatiladi', hosil:'Yoz–kuz davomida gullaydi', parvarish:'Tuproq qurigach sug\'orish', suvKun:5, oziqaKun:21, artishKun:14},
+  {id:'g26', name:'Lavanda', type:'gul', emoji:'💜', ekish:'Bahorda ko\'chat yoki urug\'dan', sharoit:'To\'liq quyosh, quruq tuproq', foyda:'Xushbo\'y, efir moyi va oromkunlik uchun', hosil:'Iyun–avgustda gullaydi', parvarish:'Kam sug\'orish, ortiqcha namdan saqlanish', suvKun:7, oziqaKun:30, artishKun:21},
+  {id:'g27', name:'Pion', type:'gul', emoji:'🌸', ekish:'Kuzda ildiz ekiladi', sharoit:'To\'liq quyosh, sovuq qish talab qiladi', foyda:'Yirik, xushbo\'y bezak guli', hosil:'May–iyunda gullaydi', parvarish:'Haftada 1–2 marta sug\'orish', suvKun:4, oziqaKun:21, artishKun:14},
+  {id:'g28', name:'Unutmagul', type:'gul', emoji:'💙', ekish:'Bahorda urug\'dan', sharoit:'Yarim soya, nam tuproq', foyda:'Kichik, nafis ko\'k gullar, chegaralar uchun', hosil:'Bahorda gullaydi', parvarish:'Tuproqni doim nam ushlash', suvKun:2, oziqaKun:14, artishKun:10},
+  {id:'g29', name:'Qo\'ng\'iroqgul', type:'gul', emoji:'🔔', ekish:'Bahorda ko\'chatdan', sharoit:'Yarim soya, salqin joy', foyda:'Bog\' chegaralari uchun bezak', hosil:'Yozda gullaydi', parvarish:'Haftada 2 marta sug\'orish', suvKun:3, oziqaKun:18, artishKun:14},
+  {id:'g30', name:'Nilufar (suv guli)', type:'gul', emoji:'🪷', ekish:'Bahorda suv havzasiga ekiladi', sharoit:'To\'liq quyosh, suvli muhit', foyda:'Hovuz bezagi, dorivor va ramziy ahamiyatga ega', hosil:'Yoz bo\'yi gullaydi', parvarish:'Suv sathini doim ushlab turish', suvKun:1, oziqaKun:30, artishKun:21},
+
+  // ---- KO'CHATLAR (20) ----
+  {id:'k1', name:'Pomidor ko\'chati', type:'kochat', emoji:'🍅', ekish:'Bahorda (aprel) ochiq yerga ko\'chiriladi', sharoit:'To\'liq quyosh, unumdor tuproq', foyda:'Vitamin C ga boy, oshxonada keng qo\'llaniladi', hosil:'Ekilgandan 70–90 kunda hosil beradi', parvarish:'Har kuni yengil sug\'orish, tayoqqa bog\'lash', suvKun:1, oziqaKun:14, artishKun:0},
+  {id:'k2', name:'Bodring ko\'chati', type:'kochat', emoji:'🥒', ekish:'Bahorda (may) ochiq yerga', sharoit:'Quyosh, nam tuproq', foyda:'Suvli, tez hosil beradigan sabzavot', hosil:'50–60 kunda hosilga kiradi', parvarish:'Har kuni sug\'orish, panjara bo\'ylab yo\'naltirish', suvKun:1, oziqaKun:10, artishKun:0},
+  {id:'k3', name:'Qalampir ko\'chati', type:'kochat', emoji:'🫑', ekish:'Bahorda issiq tushgach ekiladi', sharoit:'To\'liq quyosh, iliq iqlim', foyda:'Vitamin va antioksidantlarga boy', hosil:'80–100 kunda hosil beradi', parvarish:'Haftada 3 marta sug\'orish', suvKun:2, oziqaKun:14, artishKun:0},
+  {id:'k4', name:'Baqlajon ko\'chati', type:'kochat', emoji:'🍆', ekish:'Bahorda issiq iqlimda ekiladi', sharoit:'To\'liq quyosh, unumdor tuproq', foyda:'Tolaga boy, taomlarda keng ishlatiladi', hosil:'90–110 kunda hosilga kiradi', parvarish:'Haftada 3 marta sug\'orish', suvKun:2, oziqaKun:14, artishKun:0},
+  {id:'k5', name:'Rayhon', type:'kochat', emoji:'🌿', ekish:'Bahorda urug\' yoki ko\'chatdan', sharoit:'Quyosh, iliq joy', foyda:'Ziravor va dorivor o\'simlik, ovqatga hid beradi', hosil:'40–50 kunda terib olish mumkin', parvarish:'Har 2 kunda sug\'orish, uchini qirqib turish', suvKun:2, oziqaKun:14, artishKun:0},
+  {id:'k6', name:'Yalpiz', type:'kochat', emoji:'🌿', ekish:'Bahorda ko\'chatdan, tez ko\'payadi', sharoit:'Yarim soya, nam tuproq', foyda:'Choy va taomlar uchun xushbo\'y ziravor', hosil:'30–40 kunda terib olinadi', parvarish:'Tuproqni doim nam ushlash', suvKun:2, oziqaKun:14, artishKun:0},
+  {id:'k7', name:'Petrushka', type:'kochat', emoji:'🌿', ekish:'Erta bahorda urug\'dan', sharoit:'Yarim soya, nam tuproq', foyda:'Vitamin K va Cga boy ziravor', hosil:'70–80 kunda terib olinadi', parvarish:'Haftada 3 marta sug\'orish', suvKun:2, oziqaKun:18, artishKun:0},
+  {id:'k8', name:'Ukrop', type:'kochat', emoji:'🌿', ekish:'Bahorda urug\'dan to\'g\'ridan-to\'g\'ri', sharoit:'To\'liq quyosh', foyda:'Konservalash va taomlarga xushbo\'ylik beradi', hosil:'40–50 kunda terib olinadi', parvarish:'Haftada 2–3 marta sug\'orish', suvKun:3, oziqaKun:18, artishKun:0},
+  {id:'k9', name:'Salat', type:'kochat', emoji:'🥬', ekish:'Bahor yoki kuzda ekiladi', sharoit:'Yarim soya, salqin harorat', foyda:'Past kaloriyali, tez o\'suvchi sabzavot', hosil:'30–45 kunda terib olinadi', parvarish:'Har kuni yengil sug\'orish', suvKun:1, oziqaKun:14, artishKun:0},
+  {id:'k10', name:'Qulupnay', type:'kochat', emoji:'🍓', ekish:'Bahor yoki kuzda ko\'chatdan', sharoit:'To\'liq quyosh, unumdor tuproq', foyda:'Vitamin C ga boy shirin meva', hosil:'Ekilgandan keyingi bahorda hosil beradi', parvarish:'Haftada 3 marta sug\'orish, somon bilan mulchalash', suvKun:2, oziqaKun:21, artishKun:0},
+  {id:'k11', name:'Uzum ko\'chati', type:'kochat', emoji:'🍇', ekish:'Erta bahor yoki kuzda ekiladi', sharoit:'To\'liq quyosh, drenajli tuproq', foyda:'Shirin meva va sharbat uchun xom ashyo', hosil:'2–3 yildan keyin birinchi hosil', parvarish:'Haftada 1–2 marta sug\'orish, panjara ustidan yo\'naltirish', suvKun:4, oziqaKun:30, artishKun:0},
+  {id:'k12', name:'Olma ko\'chati', type:'kochat', emoji:'🍎', ekish:'Kuzda yoki erta bahorda ekiladi', sharoit:'To\'liq quyosh, chuqur tuproq', foyda:'Uzoq umr ko\'radigan mevali daraxt', hosil:'3–5 yildan keyin hosil bera boshlaydi', parvarish:'Haftada 1 marta chuqur sug\'orish', suvKun:5, oziqaKun:30, artishKun:0},
+  {id:'k13', name:'Nok ko\'chati', type:'kochat', emoji:'🍐', ekish:'Kuzda yoki erta bahorda ekiladi', sharoit:'To\'liq quyosh, unumdor tuproq', foyda:'Shirin va sersuv meva beradi', hosil:'3–4 yildan keyin hosil beradi', parvarish:'Haftada 1 marta sug\'orish', suvKun:5, oziqaKun:30, artishKun:0},
+  {id:'k14', name:'Behi ko\'chati', type:'kochat', emoji:'🍐', ekish:'Kuzda ekiladi', sharoit:'To\'liq quyosh, issiqsevar', foyda:'Murabbo va sharbat uchun mashhur meva', hosil:'3–4 yildan keyin hosil beradi', parvarish:'Haftada 1 marta sug\'orish', suvKun:5, oziqaKun:30, artishKun:0},
+  {id:'k15', name:'O\'rik ko\'chati', type:'kochat', emoji:'🍑', ekish:'Kuzda yoki erta bahorda ekiladi', sharoit:'To\'liq quyosh, drenajli tuproq', foyda:'Vitamin A ga boy shirin meva', hosil:'2–3 yildan keyin hosil beradi', parvarish:'Haftada 1 marta sug\'orish', suvKun:5, oziqaKun:30, artishKun:0},
+  {id:'k16', name:'Shaftoli ko\'chati', type:'kochat', emoji:'🍑', ekish:'Kuzda ekiladi', sharoit:'To\'liq quyosh, issiq iqlim', foyda:'Sersuv, xushbo\'y va shirin meva', hosil:'2–3 yildan keyin hosil beradi', parvarish:'Haftada 1–2 marta sug\'orish', suvKun:4, oziqaKun:30, artishKun:0},
+  {id:'k17', name:'Anor ko\'chati', type:'kochat', emoji:'🍎', ekish:'Bahorda ekiladi', sharoit:'To\'liq quyosh, issiq iqlim', foyda:'Antioksidantlarga boy, sharbat uchun mashhur', hosil:'2–3 yildan keyin hosil beradi', parvarish:'Haftada 1 marta sug\'orish', suvKun:5, oziqaKun:30, artishKun:0},
+  {id:'k18', name:'Limon (tuvakda)', type:'kochat', emoji:'🍋', ekish:'Yil bo\'yi tuvakda o\'stiriladi', sharoit:'Yorug\' quyosh, qishda iliq xona', foyda:'Vitamin C manbai, xona havosini yaxshilaydi', hosil:'2–3 yildan keyin meva bera boshlaydi', parvarish:'Haftada 2 marta sug\'orish', suvKun:3, oziqaKun:21, artishKun:14},
+  {id:'k19', name:'Piyoz ko\'chati', type:'kochat', emoji:'🧅', ekish:'Erta bahorda yoki kuzda ekiladi', sharoit:'To\'liq quyosh, yengil tuproq', foyda:'Deyarli barcha taomlarda ishlatiladigan sabzavot', hosil:'90–110 kunda hosil beradi', parvarish:'Haftada 2 marta sug\'orish', suvKun:3, oziqaKun:21, artishKun:0},
+  {id:'k20', name:'Sarimsoq ko\'chati', type:'kochat', emoji:'🧄', ekish:'Kuzda ekiladi, bahorda hosil beradi', sharoit:'To\'liq quyosh, drenajli tuproq', foyda:'Dorivor xossaga ega, immunitetni kuchaytiradi', hosil:'Ekilgandan 8–9 oyda hosil beradi', parvarish:'Haftada 1 marta sug\'orish', suvKun:5, oziqaKun:30, artishKun:0},
+];
+
+/* ==========================================================================
+   2) AGROAPTEKA — ZAXIRA (SUPABASE JAVOB BERMASA SHU KO'RSATILADI)
+   ========================================================================== */
+let APTEKALAR = [
+  {name:'YashilBog\' Agroapteka', region:'Chilonzor tumani', address:'Bunyodkor shoh ko\'chasi, 12-uy', phone:'+998 71 200 11 22', hours:'09:00–19:00'},
+  {name:'FloraPlus Agroapteka', region:'Yunusobod tumani', address:'Amir Temur ko\'chasi, 84-uy', phone:'+998 71 234 56 78', hours:'08:30–20:00'},
+  {name:'Bog\'bon Yordamchisi', region:'Mirzo Ulug\'bek tumani', address:'Buyuk Ipak Yo\'li ko\'chasi, 45-uy', phone:'+998 71 245 67 89', hours:'09:00–18:00'},
+  {name:'Hosildor Agroapteka', region:'Shayxontohur tumani', address:'Navoiy ko\'chasi, 21-uy', phone:'+998 71 256 78 90', hours:'09:00–19:00'},
+  {name:'EkoO\'simlik Do\'koni', region:'Sergeli tumani', address:'Qo\'yliq ko\'chasi, 7-uy', phone:'+998 71 267 89 01', hours:'08:00–18:00'},
+  {name:'Nihol Agroapteka', region:'Uchtepa tumani', address:'Chilonzor–Farhod ko\'chasi, 33-uy', phone:'+998 71 278 90 12', hours:'09:00–19:00'},
+  {name:'Gulzor Agroapteka', region:'Yakkasaroy tumani', address:'Shota Rustaveli ko\'chasi, 15-uy', phone:'+998 71 289 01 23', hours:'09:00–18:30'},
+  {name:'Tabiat Agroapteka', region:'Olmazor tumani', address:'Qorasuv ko\'chasi, 5-uy', phone:'+998 71 290 12 34', hours:'08:30–19:00'},
+];
+const APTEKALAR_FALLBACK = APTEKALAR.slice();
+
+/* ==========================================================================
+   3) HOLAT (STATE)
+   ========================================================================== */
+let catalogById = Object.fromEntries(CATALOG.map(p => [p.id, p]));
+let myPot = [];           // { rowId, plantId, addedAt, lastSuv, lastOziqa, lastArtish }
+let userPoints = 0;
+let todayDoneCount = 0;
+const today = new Date(); today.setHours(0,0,0,0);
+
+const MOCK_LEADERS = [
+  {name:'Dilnoza R.', pts:340},
+  {name:'Sardor K.', pts:295},
+  {name:'Madina T.', pts:260},
+  {name:'Bekzod A.', pts:190},
+  {name:'Farrux N.', pts:150},
+];
+let leaderboardData = MOCK_LEADERS;
+
+const POSTS_FALLBACK = [
+  {id:'mock1', user:'Dilnoza R.', emoji:'🌹', caption:'Atirgulim shu bahor birinchi bor gulladi!', comments:['Zo\'r bo\'libdi! Qanday oziqa berdingiz?','Rangi juda chiroyli 🌸']},
+  {id:'mock2', user:'Sardor K.', emoji:'🍅', caption:'Pomidorlarim endi qizara boshladi 🍅', comments:['Menda ham xuddi shunday, hafta oxirida terib olaman']},
+  {id:'mock3', user:'Madina T.', emoji:'🌵', caption:'Orxideyam 2 oydan beri gullab turibdi', comments:['Qanday sug\'oryapsiz? Menikida gullamayapti']},
+];
+let POSTS = POSTS_FALLBACK.slice();
+
+/* ==========================================================================
+   4) HOLAT BANNERI
+   ========================================================================== */
+function setStatus(mode){
+  const b = document.getElementById('statusBanner');
+  if (mode === 'live'){
+    b.textContent = "🟢 LIVE — Supabase'ga ulangan, ma'lumotlar saqlanmoqda";
+    b.style.background = 'var(--leaf-600)';
+  } else {
+    b.textContent = "🔌 Supabase jadvallari topilmadi — supabase_schema.sql faylini SQL Editor'da ishga tushiring. Hozircha namunaviy ma'lumotlar ko'rsatilmoqda.";
+    b.style.background = 'var(--clay-500)';
+  }
+}
+
+/* ==========================================================================
+   5) AUTENTIFIKATSIYA
+   ========================================================================== */
+async function initAuth(){
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  await handleSession(session);
+  supabaseClient.auth.onAuthStateChange((_event, session) => { handleSession(session); });
+}
+
+async function handleSession(session){
+  if (session && session.user){
+    currentUser = session.user;
+    try{
+      const { data: profile, error } = await supabaseClient.from('profiles').select('*').eq('id', currentUser.id).single();
+      if (error) throw error;
+      currentProfile = profile;
+    } catch(e){
+      currentProfile = { id: currentUser.id, email: currentUser.email, is_admin:false, points:0 };
+    }
+    userPoints = currentProfile.points || 0;
+  } else {
+    currentUser = null;
+    currentProfile = null;
+    userPoints = 0;
+  }
+  updateAuthUI();
+  await loadMyPot();
+  await loadLeaderboard();
+}
+
+function updateAuthUI(){
+  const slot = document.getElementById('authSlot');
+  const adminLink = document.getElementById('adminLink');
+  if (currentUser){
+    const label = (currentProfile && currentProfile.email ? currentProfile.email : currentUser.email).split('@')[0];
+    slot.innerHTML = `<span class="auth-name">👤 ${label}</span><button class="btn btn-ghost btn-sm" onclick="logout()">Chiqish</button>`;
+  } else {
+    slot.innerHTML = `<button class="btn btn-ghost btn-sm" onclick="openAuthModal('login')">Kirish</button>`;
+  }
+  const isAdmin = !!(currentProfile && currentProfile.is_admin);
+  adminLink.classList.toggle('show', isAdmin);
+  document.getElementById('adminGate').style.display = isAdmin ? 'none' : 'block';
+  document.getElementById('adminPanel').style.display = isAdmin ? 'grid' : 'none';
+  if (isAdmin){
+    renderAdminPlantList();
+    renderAdminAptekaList();
+    renderAdminPostList();
+  }
+}
+
+function openAuthModal(mode){
+  authMode = mode;
+  document.getElementById('authError').classList.remove('show');
+  document.getElementById('authEmail').value = '';
+  document.getElementById('authPassword').value = '';
+  refreshAuthModalText();
+  document.getElementById('authModal').classList.add('open');
+}
+function closeAuthModal(){ document.getElementById('authModal').classList.remove('open'); }
+function toggleAuthMode(){ authMode = authMode === 'login' ? 'signup' : 'login'; refreshAuthModalText(); }
+function refreshAuthModalText(){
+  const isLogin = authMode === 'login';
+  document.getElementById('authTitle').textContent = isLogin ? 'Tizimga kirish' : "Ro'yxatdan o'tish";
+  document.getElementById('authSub').textContent = isLogin ? "GulTuvagingizni saqlash uchun tizimga kiring." : "Yangi hisob yaratib, GulTuvagingizni saqlashni boshlang.";
+  document.getElementById('authSubmitBtn').textContent = isLogin ? 'Kirish' : "Ro'yxatdan o'tish";
+  document.getElementById('authSwitch').innerHTML = isLogin
+    ? `Hisobingiz yo'qmi? <a onclick="toggleAuthMode()">Ro'yxatdan o'tish</a>`
+    : `Hisobingiz bormi? <a onclick="toggleAuthMode()">Kirish</a>`;
+}
+
+async function submitAuth(){
+  const email = document.getElementById('authEmail').value.trim();
+  const password = document.getElementById('authPassword').value;
+  const errEl = document.getElementById('authError');
+  errEl.classList.remove('show');
+  if (!email || password.length < 6){
+    errEl.textContent = "Email kiriting va parol kamida 6 belgidan iborat bo'lsin.";
+    errEl.classList.add('show');
+    return;
+  }
+  try{
+    if (authMode === 'login'){
+      const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
+      if (error) throw error;
+      showToast('👋 Xush kelibsiz!');
+    } else {
+      const { error } = await supabaseClient.auth.signUp({ email, password });
+      if (error) throw error;
+      showToast("✅ Ro'yxatdan o'tdingiz!");
+    }
+    closeAuthModal();
+  } catch(e){
+    errEl.textContent = e.message || 'Xatolik yuz berdi';
+    errEl.classList.add('show');
+  }
+}
+
+async function logout(){
+  await supabaseClient.auth.signOut();
+  showToast('👋 Tizimdan chiqdingiz');
+}
+
+/* ==========================================================================
+   6) KATALOG — YUKLASH VA RENDER
+   ========================================================================== */
+let currentFilter = 'hammasi';
+let currentSearch = '';
+
+async function loadCatalog(){
+  try{
+    const { data, error } = await supabaseClient.from('plants').select('*').order('name');
+    if (error) throw error;
+    if (data && data.length){
+      CATALOG = data.map(d => ({
+        id:d.id, name:d.name, type:d.type, emoji:d.emoji, ekish:d.ekish, sharoit:d.sharoit,
+        foyda:d.foyda, hosil:d.hosil, parvarish:d.parvarish,
+        suvKun:d.suv_kun, oziqaKun:d.oziqa_kun, artishKun:d.artish_kun
+      }));
+      setStatus('live');
+    } else {
+      setStatus('fallback');
+    }
+  } catch(e){
+    console.warn("Katalogni Supabase'dan yuklab bo'lmadi, mahalliy ma'lumot ishlatilmoqda:", e.message);
+    setStatus('fallback');
+  }
+  catalogById = Object.fromEntries(CATALOG.map(p => [p.id, p]));
+  renderCatalog();
+}
+
+function renderCatalog(){
+  const grid = document.getElementById('catalogGrid');
+  const items = CATALOG.filter(p =>
+    (currentFilter === 'hammasi' || p.type === currentFilter) &&
+    p.name.toLowerCase().includes(currentSearch.toLowerCase())
+  );
+  grid.innerHTML = items.map(p => `
+    <div class="plant-card">
+      <div class="plant-img" style="background:${p.type==='gul' ? '#eef4e7' : '#f4e9d6'}">${p.emoji}</div>
+      <div class="plant-body">
+        <span class="plant-tag">${p.type === 'gul' ? 'Gul' : "Ko'chat"}</span>
+        <h4>${p.name}</h4>
+        <div class="meta"><b>Ekish:</b> ${p.ekish}</div>
+        <div class="meta"><b>Hosil/gullash:</b> ${p.hosil}</div>
+        <button class="details-toggle" onclick="toggleDetails(this)">Batafsil ko'rsatish ▾</button>
+        <div class="plant-extra">
+          <p><b>Sharoit:</b> ${p.sharoit}</p>
+          <p><b>Foydasi:</b> ${p.foyda}</p>
+          <p><b>Parvarish:</b> ${p.parvarish}</p>
+        </div>
+        <div class="plant-foot">
+          <button class="btn btn-primary btn-sm" ${myPot.some(mp=>mp.plantId===p.id) ? 'disabled' : ''} onclick="addToPot('${p.id}')">
+            ${myPot.some(mp=>mp.plantId===p.id) ? "Tuvakda ✓" : "Tuvakka qo'shish"}
+          </button>
+        </div>
+      </div>
+    </div>
+  `).join('') || '<p style="color:var(--ink-600)">Hech narsa topilmadi.</p>';
+}
+
+function toggleDetails(btn){
+  const extra = btn.nextElementSibling;
+  extra.classList.toggle('open');
+  btn.textContent = extra.classList.contains('open') ? 'Yashirish ▴' : "Batafsil ko'rsatish ▾";
+}
+
+document.querySelectorAll('.pill').forEach(pill => {
+  pill.addEventListener('click', () => {
+    document.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
+    pill.classList.add('active');
+    currentFilter = pill.dataset.filter;
+    renderCatalog();
+  });
+});
+document.getElementById('searchInput').addEventListener('input', (e) => {
+  currentSearch = e.target.value;
+  renderCatalog();
+});
+
+/* ==========================================================================
+   7) MENING GULTUVAGIM
+   ========================================================================== */
+async function loadMyPot(){
+  if (!currentUser){ myPot = []; renderMyPot(); renderCatalog(); return; }
+  try{
+    const { data, error } = await supabaseClient.from('user_plants').select('*').eq('user_id', currentUser.id);
+    if (error) throw error;
+    myPot = (data || []).map(r => ({
+      rowId:r.id, plantId:r.plant_id,
+      addedAt:new Date(r.added_at), lastSuv:new Date(r.last_suv),
+      lastOziqa:new Date(r.last_oziqa), lastArtish:new Date(r.last_artish)
+    }));
+  } catch(e){
+    console.warn("Tuvakni yuklab bo'lmadi:", e.message);
+    myPot = [];
+  }
+  renderMyPot();
+  renderCatalog();
+}
+
+async function addToPot(plantId){
+  if (!currentUser){ showToast('🔐 Avval tizimga kiring'); openAuthModal('login'); return; }
+  if (myPot.some(mp => mp.plantId === plantId)) return;
+  const nowIso = new Date().toISOString();
+  try{
+    const { data, error } = await supabaseClient.from('user_plants').insert({
+      user_id: currentUser.id, plant_id: plantId,
+      added_at: nowIso, last_suv: nowIso, last_oziqa: nowIso, last_artish: nowIso
+    }).select().single();
+    if (error) throw error;
+    myPot.push({ rowId:data.id, plantId, addedAt:new Date(), lastSuv:new Date(), lastOziqa:new Date(), lastArtish:new Date() });
+  } catch(e){
+    showToast('❌ Saqlab bo\'lmadi: ' + e.message);
+    return;
+  }
+  showToast("🪴 " + catalogById[plantId].name + " tuvagingizga qo'shildi!");
+  renderCatalog();
+  renderMyPot();
+  scrollToId('tuvagim');
+}
+
+async function removeFromPot(plantId){
+  const entry = myPot.find(mp => mp.plantId === plantId);
+  if (entry && entry.rowId){
+    try{ await supabaseClient.from('user_plants').delete().eq('id', entry.rowId); }
+    catch(e){ console.error(e); }
+  }
+  myPot = myPot.filter(mp => mp.plantId !== plantId);
+  renderMyPot();
+  renderCatalog();
+}
+
+function isDue(lastDate, freqDays){
+  if (!freqDays) return false;
+  const diffDays = Math.floor((today - lastDate) / (1000*60*60*24));
+  return diffDays >= freqDays;
+}
+
+async function completeTask(plantId, taskType){
+  const entry = myPot.find(mp => mp.plantId === plantId);
+  if (!entry) return;
+  const nowIso = new Date().toISOString();
+  const field = taskType === 'suv' ? 'last_suv' : taskType === 'oziqa' ? 'last_oziqa' : 'last_artish';
+  if (taskType === 'suv') entry.lastSuv = new Date();
+  if (taskType === 'oziqa') entry.lastOziqa = new Date();
+  if (taskType === 'artish') entry.lastArtish = new Date();
+  userPoints += 5;
+  todayDoneCount += 1;
+  try{
+    if (entry.rowId) await supabaseClient.from('user_plants').update({ [field]: nowIso }).eq('id', entry.rowId);
+    if (currentUser){
+      await supabaseClient.from('profiles').update({ points: userPoints }).eq('id', currentUser.id);
+      if (currentProfile) currentProfile.points = userPoints;
+    }
+  } catch(e){ console.error(e); }
+  showToast('✅ Vazifa bajarildi! +5 ball');
+  renderMyPot();
+  loadLeaderboard();
+}
+
+function renderMyPot(){
+  const list = document.getElementById('myPlantsList');
+  document.getElementById('statPotCount').textContent = myPot.length;
+  document.getElementById('statPoints').textContent = userPoints;
+  document.getElementById('ballCount').textContent = userPoints;
+  document.getElementById('streakCount').textContent = todayDoneCount;
+
+  if (!currentUser){
+    list.innerHTML = `<div class="empty-note">GulTuvagingizni saqlash uchun <a style="color:var(--leaf-600); text-decoration:underline; cursor:pointer;" onclick="openAuthModal('login')">tizimga kiring</a> 🔐</div>`;
+    document.getElementById('dueCount').textContent = '0';
+    return;
+  }
+
+  if (myPot.length === 0){
+    list.innerHTML = '<div class="empty-note">Hali tuvagingizda o\'simlik yo\'q. Katalogdan birini tanlab, "Tuvakka qo\'shish" tugmasini bosing 🌱</div>';
+    document.getElementById('dueCount').textContent = '0';
+    return;
+  }
+
+  let dueTotal = 0;
+  list.innerHTML = myPot.map(mp => {
+    const p = catalogById[mp.plantId];
+    if (!p) return '';
+    const tasks = [];
+    if (isDue(mp.lastSuv, p.suvKun)){ tasks.push({key:'suv', label:'💧 Suv quyish'}); }
+    if (isDue(mp.lastOziqa, p.oziqaKun)){ tasks.push({key:'oziqa', label:'🌱 Oziqlantirish'}); }
+    if (p.artishKun && isDue(mp.lastArtish, p.artishKun)){ tasks.push({key:'artish', label:'🧽 Barglarini artish'}); }
+    dueTotal += tasks.length;
+    const badges = tasks.length
+      ? tasks.map(t => `<button class="badge-task badge-due" onclick="completeTask('${p.id}','${t.key}')">${t.label} ✓</button>`).join('')
+      : `<span class="badge-task badge-ok">✓ Bugun hammasi bajarilgan</span>`;
+    return `
+      <div class="my-plant-row">
+        <div class="my-plant-emoji" style="background:${p.type==='gul' ? '#eef4e7' : '#f4e9d6'}">${p.emoji}</div>
+        <div class="my-plant-info">
+          <h5>${p.name}</h5>
+          <div class="task-badges">${badges}</div>
+        </div>
+        <button class="remove-plant" title="Tuvakdan olib tashlash" onclick="removeFromPot('${p.id}')">✕</button>
+      </div>
+    `;
+  }).join('');
+  document.getElementById('dueCount').textContent = dueTotal;
+}
+
+/* ==========================================================================
+   8) REYTING
+   ========================================================================== */
+async function loadLeaderboard(){
+  try{
+    const { data, error } = await supabaseClient.from('profiles').select('email, points').order('points', { ascending:false }).limit(8);
+    if (error) throw error;
+    leaderboardData = (data && data.length)
+      ? data.map(d => ({ name: (d.email || 'Foydalanuvchi').split('@')[0], pts: d.points || 0, me: currentUser && d.email === currentUser.email }))
+      : MOCK_LEADERS;
+  } catch(e){
+    leaderboardData = MOCK_LEADERS;
+  }
+  renderLeaderboard();
+}
+
+function renderLeaderboard(){
+  const board = document.getElementById('leaderboard');
+  const sorted = [...leaderboardData].sort((a,b) => b.pts - a.pts);
+  board.innerHTML = sorted.map((u, i) => `
+    <div class="lb-row ${u.me ? 'me' : ''}">
+      <div class="lb-rank">${i+1}</div>
+      <div class="lb-name">${u.name}${u.me ? ' (Siz)' : ''}</div>
+      <div class="lb-pts mono">${u.pts} ball</div>
+    </div>
+  `).join('');
+}
+
+/* ==========================================================================
+   9) BOG'CHA
+   ========================================================================== */
+async function loadPosts(){
+  try{
+    const { data, error } = await supabaseClient
+      .from('posts')
+      .select('*, comments(*)')
+      .order('created_at', { ascending:false })
+      .limit(30);
+    if (error) throw error;
+    POSTS = (data && data.length)
+      ? data.map(p => ({
+          id:p.id, user:p.user_name, emoji:p.emoji, caption:p.caption,
+          comments:(p.comments || []).sort((a,b)=> new Date(a.created_at)-new Date(b.created_at)).map(c => ({ text:c.body, user:c.user_name }))
+        }))
+      : POSTS_FALLBACK.slice();
+  } catch(e){
+    POSTS = POSTS_FALLBACK.slice();
+  }
+  renderPosts();
+}
+
+function renderPosts(){
+  const grid = document.getElementById('postGrid');
+  grid.innerHTML = POSTS.map((post) => `
+    <div class="post-card">
+      <div class="post-img" style="background:#eef4e7">${post.emoji}</div>
+      <div class="post-body">
+        <div class="post-user">${post.user}</div>
+        <div class="post-caption">${post.caption}</div>
+        <div class="post-comments">
+          ${(post.comments || []).map(c => `<div class="c">💬 ${typeof c === 'string' ? c : c.text}</div>`).join('')}
+        </div>
+        <div class="add-comment">
+          <input type="text" id="commentInput_${post.id}" placeholder="Maslahat yozing...">
+          <button onclick="addComment('${post.id}')">Yuborish</button>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function isLocalPostId(id){ return String(id).startsWith('mock') || String(id).startsWith('local'); }
+
+async function addComment(postId){
+  const input = document.getElementById('commentInput_' + postId);
+  if (!input.value.trim()) return;
+  const text = input.value.trim();
+  const post = POSTS.find(p => p.id === postId);
+  const userName = currentUser ? (currentProfile && currentProfile.email ? currentProfile.email.split('@')[0] : 'Siz') : 'Mehmon';
+  if (currentUser && !isLocalPostId(postId)){
+    try{ await supabaseClient.from('comments').insert({ post_id: postId, user_id: currentUser.id, user_name:userName, body:text }); }
+    catch(e){ console.error(e); }
+  }
+  if (post) post.comments.push({ text, user:userName });
+  input.value = '';
+  renderPosts();
+}
+
+async function addPost(){
+  const input = document.getElementById('postCaption');
+  if (!input.value.trim()) return;
+  if (!currentUser){ showToast('🔐 Avval tizimga kiring'); openAuthModal('login'); return; }
+  const emojis = ['🌱','🌷','🌵','🌸','🍅','🌻'];
+  const emoji = emojis[Math.floor(Math.random()*emojis.length)];
+  const caption = input.value.trim();
+  const userName = currentProfile && currentProfile.email ? currentProfile.email.split('@')[0] : 'Siz';
+  try{
+    const { data, error } = await supabaseClient.from('posts').insert({ user_id: currentUser.id, user_name:userName, emoji, caption }).select().single();
+    if (error) throw error;
+    POSTS.unshift({ id:data.id, user:userName, emoji, caption, comments:[] });
+  } catch(e){
+    POSTS.unshift({ id:'local-'+Date.now(), user:userName, emoji, caption, comments:[] });
+  }
+  input.value = '';
+  renderPosts();
+  showToast('🌻 Postingiz bog\'chaga qo\'shildi!');
+}
+
+/* ==========================================================================
+   10) AGROAPTEKA
+   ========================================================================== */
+async function loadApteka(){
+  try{
+    const { data, error } = await supabaseClient.from('aptekalar').select('*').order('region');
+    if (error) throw error;
+    if (data && data.length) APTEKALAR = data;
+  } catch(e){
+    console.warn("Agroapteka ma'lumotini yuklab bo'lmadi:", e.message);
+  }
+  renderApteka();
+}
+
+function renderApteka(){
+  const regionSelect = document.getElementById('regionSelect');
+  regionSelect.innerHTML = '<option value="hammasi">Barcha hududlar</option>';
+  [...new Set(APTEKALAR.map(a => a.region))].forEach(r => {
+    const opt = document.createElement('option');
+    opt.value = r; opt.textContent = r;
+    regionSelect.appendChild(opt);
+  });
+  const val = regionSelect.value;
+  const list = APTEKALAR.filter(a => val === 'hammasi' || a.region === val);
+  document.getElementById('aptekaGrid').innerHTML = list.map(a => `
+    <div class="apteka-card">
+      <span class="apteka-tag">${a.region}</span>
+      <h5>${a.name}</h5>
+      <p>📍 ${a.address}</p>
+      <p>📞 ${a.phone}</p>
+      <p>🕒 ${a.hours}</p>
+    </div>
+  `).join('');
+}
+
+/* ==========================================================================
+   11) ADMIN PANELI
+   ========================================================================== */
+function fval(id){ return document.getElementById(id).value.trim(); }
+
+async function adminAddPlant(){
+  if (!currentProfile || !currentProfile.is_admin) return;
+  const p = {
+    id: 'p_' + Date.now().toString(36),
+    name: fval('ap_name'),
+    type: document.getElementById('ap_type').value,
+    emoji: fval('ap_emoji') || '🌿',
+    ekish: fval('ap_ekish'), sharoit: fval('ap_sharoit'),
+    foyda: fval('ap_foyda'), hosil: fval('ap_hosil'), parvarish: fval('ap_parvarish'),
+    suv_kun: Number(document.getElementById('ap_suvkun').value) || 3,
+    oziqa_kun: Number(document.getElementById('ap_oziqakun').value) || 14,
+    artish_kun: Number(document.getElementById('ap_artishkun').value) || 0
+  };
+  if (!p.name){ showToast("⚠️ O'simlik nomini kiriting"); return; }
+  try{
+    const { error } = await supabaseClient.from('plants').insert(p);
+    if (error) throw error;
+    ['ap_name','ap_emoji','ap_ekish','ap_sharoit','ap_foyda','ap_hosil','ap_parvarish'].forEach(id => document.getElementById(id).value = '');
+    showToast("✅ O'simlik qo'shildi");
+    await loadCatalog();
+    renderAdminPlantList();
+  } catch(e){ showToast('❌ Xatolik: ' + e.message); }
+}
+
+async function adminDeletePlant(id){
+  try{ const { error } = await supabaseClient.from('plants').delete().eq('id', id); if (error) throw error; }
+  catch(e){ showToast('❌ Xatolik: ' + e.message); return; }
+  await loadCatalog();
+  renderAdminPlantList();
+}
+
+function renderAdminPlantList(){
+  document.getElementById('adminPlantList').innerHTML = CATALOG.map(p => `
+    <div class="admin-row"><span>${p.emoji} ${p.name}</span><button class="del-btn" title="O'chirish" onclick="adminDeletePlant('${p.id}')">✕</button></div>
+  `).join('');
+}
+
+async function adminAddApteka(){
+  if (!currentProfile || !currentProfile.is_admin) return;
+  const a = { name: fval('aa_name'), region: fval('aa_region'), address: fval('aa_address'), phone: fval('aa_phone'), hours: fval('aa_hours') };
+  if (!a.name || !a.region){ showToast("⚠️ Nomi va hududini kiriting"); return; }
+  try{
+    const { error } = await supabaseClient.from('aptekalar').insert(a);
+    if (error) throw error;
+    ['aa_name','aa_region','aa_address','aa_phone','aa_hours'].forEach(id => document.getElementById(id).value = '');
+    showToast('✅ Agroapteka qo\'shildi');
+    await loadApteka();
+    renderAdminAptekaList();
+  } catch(e){ showToast('❌ Xatolik: ' + e.message); }
+}
+
+async function adminDeleteApteka(id){
+  if (!id) return;
+  try{ const { error } = await supabaseClient.from('aptekalar').delete().eq('id', id); if (error) throw error; }
+  catch(e){ showToast('❌ Xatolik: ' + e.message); return; }
+  await loadApteka();
+  renderAdminAptekaList();
+}
+
+function renderAdminAptekaList(){
+  document.getElementById('adminAptekaList').innerHTML = APTEKALAR.map(a => `
+    <div class="admin-row">
+      <span>${a.name} — ${a.region}</span>
+      ${a.id ? `<button class="del-btn" title="O'chirish" onclick="adminDeleteApteka('${a.id}')">✕</button>` : ''}
+    </div>
+  `).join('');
+}
+
+async function adminDeletePost(id){
+  try{ const { error } = await supabaseClient.from('posts').delete().eq('id', id); if (error) throw error; }
+  catch(e){ showToast('❌ Xatolik: ' + e.message); return; }
+  await loadPosts();
+  renderAdminPostList();
+}
+
+function renderAdminPostList(){
+  document.getElementById('adminPostList').innerHTML = POSTS.map(p => {
+    const short = (p.caption || '').slice(0, 34) + ((p.caption || '').length > 34 ? '…' : '');
+    const delBtn = isLocalPostId(p.id) ? '' : `<button class="del-btn" title="O'chirish" onclick="adminDeletePost('${p.id}')">✕</button>`;
+    return `<div class="admin-row"><span>${p.user}: ${short}</span>${delBtn}</div>`;
+  }).join('');
+}
+
+/* ==========================================================================
+   12) MOBIL HAMBURGER MENYU
+   ========================================================================== */
+document.getElementById('hamburgerBtn').addEventListener('click', () => {
+  const nav = document.getElementById('navLinks');
+  const btn = document.getElementById('hamburgerBtn');
+  const isOpen = nav.classList.toggle('open');
+  btn.classList.toggle('open', isOpen);
+  btn.setAttribute('aria-expanded', String(isOpen));
+});
+document.querySelectorAll('#navLinks a').forEach(a => a.addEventListener('click', () => {
+  document.getElementById('navLinks').classList.remove('open');
+  document.getElementById('hamburgerBtn').classList.remove('open');
+}));
+
+/* ==========================================================================
+   13) YORDAMCHI FUNKSIYALAR
+   ========================================================================== */
+function scrollToId(id){ document.getElementById(id).scrollIntoView({behavior:'smooth'}); }
+let toastTimer;
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=> t.classList.remove('show'), 2600);
+}
+
+/* ==========================================================================
+   14) BOSHLASH
+   ========================================================================== */
+renderMyPot();
+renderLeaderboard();
+renderPosts();
+renderApteka();
+(async function init(){
+  await loadCatalog();
+  await loadApteka();
+  await loadPosts();
+  await initAuth();
+})();
+</script>
+</body>
+</html>
