@@ -380,7 +380,6 @@
       <li><a href="#reyting">Reyting</a></li>
       <li><a href="#bogcha">Bog'cha</a></li>
       <li><a href="#agroapteka">Agroapteka</a></li>
-      <li><a href="#admin" class="admin-link" id="adminLink">⚙️ Admin</a></li>
       <li class="auth-slot" id="authSlot">
         <button class="btn btn-ghost btn-sm" id="loginBtn" onclick="openAuthModal('login')">Kirish</button>
       </li>
@@ -748,7 +747,6 @@ async function handleSession(session){
 
 function updateAuthUI(){
   const slot = document.getElementById('authSlot');
-  const adminLink = document.getElementById('adminLink');
   if (currentUser){
     const label = (currentProfile && currentProfile.email ? currentProfile.email : currentUser.email).split('@')[0];
     slot.innerHTML = `<span class="auth-name">👤 ${label}</span><button class="btn btn-ghost btn-sm" onclick="logout()">Chiqish</button>`;
@@ -756,7 +754,6 @@ function updateAuthUI(){
     slot.innerHTML = `<button class="btn btn-ghost btn-sm" onclick="openAuthModal('login')">Kirish</button>`;
   }
   const isAdmin = !!(currentProfile && currentProfile.is_admin);
-  adminLink.classList.toggle('show', isAdmin);
   document.getElementById('adminGate').style.display = isAdmin ? 'none' : 'block';
   document.getElementById('adminPanel').style.display = isAdmin ? 'grid' : 'none';
   if (isAdmin){
