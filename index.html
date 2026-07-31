@@ -60,8 +60,9 @@
   button{font-family:inherit;}
   img,svg{display:block;max-width:100%;}
   .wrap{max-width:1180px; margin:0 auto; padding:0 24px;}
-  section{padding:88px 0;}
-  section:first-of-type{padding-top:0;}
+  section{padding:88px 0; border-top:1px solid var(--oat-200);}
+  section:first-of-type{padding-top:0; border-top:none;}
+  main > section:nth-of-type(even){background:var(--white);}
 
   :focus-visible{outline:3px solid var(--clay-500); outline-offset:3px; border-radius:4px;}
 
@@ -362,7 +363,6 @@
     .hero{grid-template-columns:1fr;}
     .pot-scene{order:-1;}
     .pot-section-inner{grid-template-columns:1fr;}
-    .navlinks{display:none;}
   }
 </style>
 </head>
