@@ -368,6 +368,11 @@
 </head>
 <body>
 
+<div class="demo-banner mono" id="notifBanner" style="display:none;">
+  <span id="notifBannerText"></span>
+  <button onclick="dismissNotification()" style="background:none; border:none; color:inherit; cursor:pointer; font-weight:700; margin-left:12px;">✕</button>
+</div>
+
 <header>
   <div class="nav">
     <div class="brand">
@@ -510,19 +515,22 @@
     <div class="apteka-list" id="aptekaGrid"></div>
   </section>
 
-  <!-- ADMIN PANEL -->
-  <section id="admin" class="wrap">
+  <!-- ADMIN PANEL (faqat admin uchun — butun bo'lim yashirin) -->
+  <section id="admin" class="wrap" style="display:none;">
     <div class="sec-head">
       <span class="eyebrow">⚙️ Admin</span>
       <h2>Boshqaruv paneli</h2>
-      <p>Katalog, agroapteka va postlarni shu yerdan boshqaring. Faqat admin huquqiga ega foydalanuvchilarga ko'rinadi.</p>
+      <p>Katalog, agroapteka, postlarni boshqaring va foydalanuvchilarga bildirishnoma yuboring.</p>
     </div>
 
-    <div class="admin-gate" id="adminGate">
-      🔒 Bu bo'lim faqat administratorlar uchun. <a style="color:var(--leaf-600); font-weight:600; cursor:pointer; text-decoration:underline;" onclick="openAuthModal('login')">Tizimga kiring</a>.
-    </div>
+    <div class="admin-grid" id="adminPanel">
+      <div class="admin-card">
+        <h3>📢 Hammaga bildirishnoma yuborish</h3>
+        <div class="form-field"><label>Xabar matni</label><textarea id="an_message" rows="3" placeholder="Masalan: Ertaga sayt texnik ishlar tufayli vaqtincha ishlamasligi mumkin"></textarea></div>
+        <button class="btn btn-primary btn-sm" onclick="adminSendNotification()">Yuborish</button>
+        <div class="admin-list" id="adminNotifList"></div>
+      </div>
 
-    <div class="admin-grid" id="adminPanel" style="display:none;">
       <div class="admin-card">
         <h3>🌱 Yangi o'simlik qo'shish</h3>
         <div class="form-field"><label>Nomi</label><input type="text" id="ap_name" placeholder="Masalan: Atirgul"></div>
@@ -754,12 +762,12 @@ function updateAuthUI(){
     slot.innerHTML = `<button class="btn btn-ghost btn-sm" onclick="openAuthModal('login')">Kirish</button>`;
   }
   const isAdmin = !!(currentProfile && currentProfile.is_admin);
-  document.getElementById('adminGate').style.display = isAdmin ? 'none' : 'block';
-  document.getElementById('adminPanel').style.display = isAdmin ? 'grid' : 'none';
+  document.getElementById('admin').style.display = isAdmin ? 'block' : 'none';
   if (isAdmin){
     renderAdminPlantList();
     renderAdminAptekaList();
     renderAdminPostList();
+    renderAdminNotifList();
   }
 }
 
@@ -1166,6 +1174,36 @@ function renderApteka(){
    ========================================================================== */
 function fval(id){ return document.getElementById(id).value.trim(); }
 
+async function adminSendNotification(){
+  if (!currentProfile || !currentProfile.is_admin) return;
+  const message = fval('an_message');
+  if (!message){ showToast('⚠️ Xabar matnini kiriting'); return; }
+  try{
+    const { error } = await supabaseClient.from('notifications').insert({ message, created_by: currentUser.id });
+    if (error) throw error;
+    document.getElementById('an_message').value = '';
+    showToast('📢 Bildirishnoma barcha foydalanuvchilarga yuborildi');
+    await renderAdminNotifList();
+  } catch(e){ showToast('❌ Xatolik: ' + e.message); }
+}
+
+async function adminDeleteNotification(id){
+  try{ const { error } = await supabaseClient.from('notifications').delete().eq('id', id); if (error) throw error; }
+  catch(e){ showToast('❌ Xatolik: ' + e.message); return; }
+  await renderAdminNotifList();
+}
+
+async function renderAdminNotifList(){
+  const box = document.getElementById('adminNotifList');
+  try{
+    const { data, error } = await supabaseClient.from('notifications').select('*').order('created_at', { ascending:false }).limit(10);
+    if (error) throw error;
+    box.innerHTML = (data || []).map(n => `
+      <div class="admin-row"><span>${n.message.slice(0,60)}${n.message.length>60?'…':''}</span><button class="del-btn" title="O'chirish" onclick="adminDeleteNotification('${n.id}')">✕</button></div>
+    `).join('') || '<div class="empty-note">Hozircha bildirishnoma yo\'q</div>';
+  } catch(e){ box.innerHTML = ''; }
+}
+
 async function adminAddPlant(){
   if (!currentProfile || !currentProfile.is_admin) return;
   const p = {
@@ -1278,6 +1316,30 @@ function showToast(msg){
 }
 
 /* ==========================================================================
+   13.5) BILDIRISHNOMA BANNERI (barcha foydalanuvchilar uchun)
+   ========================================================================== */
+let latestNotifId = null;
+async function loadLatestNotification(){
+  try{
+    const { data, error } = await supabaseClient.from('notifications').select('*').order('created_at', { ascending:false }).limit(1).maybeSingle();
+    if (error) throw error;
+    if (!data) return;
+    latestNotifId = data.id;
+    const seenId = localStorage.getItem('gultuvak_seen_notification');
+    if (seenId !== String(data.id)){
+      document.getElementById('notifBannerText').textContent = '📢 ' + data.message;
+      document.getElementById('notifBanner').style.display = 'flex';
+      document.getElementById('notifBanner').style.alignItems = 'center';
+      document.getElementById('notifBanner').style.justifyContent = 'center';
+    }
+  } catch(e){ /* jadval hali yo'q bo'lishi mumkin, jim o'tkazamiz */ }
+}
+function dismissNotification(){
+  if (latestNotifId != null) localStorage.setItem('gultuvak_seen_notification', String(latestNotifId));
+  document.getElementById('notifBanner').style.display = 'none';
+}
+
+/* ==========================================================================
    14) BOSHLASH
    ========================================================================== */
 renderMyPot();
@@ -1289,6 +1351,7 @@ renderApteka();
   await loadApteka();
   await loadPosts();
   await initAuth();
+  await loadLatestNotification();
 })();
 </script>
 </body>
