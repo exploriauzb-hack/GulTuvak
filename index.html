@@ -368,8 +368,6 @@
 </head>
 <body>
 
-<div class="demo-banner mono" id="statusBanner">🔌 Ulanmoqda...</div>
-
 <header>
   <div class="nav">
     <div class="brand">
@@ -600,7 +598,7 @@
    SUPABASE CONFIG
    ========================================================================== */
 const SUPABASE_CONFIG = {
-  url: "https://lejxhipnzmowetxxskjrk.supabase.co",
+  url: "https://lejxipnzmowetxxskjrk.supabase.co",
   anonKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxlanhpcG56bW93ZXR4eHNranJrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk4MDE5MDEsImV4cCI6MjA5NTM3NzkwMX0.ymsofAzDUUDtgZR5cF97EZd4zP79QZzYHNTd_zG6lnw"
 };
 const DEMO_MODE = !SUPABASE_CONFIG.url;
@@ -711,17 +709,11 @@ const POSTS_FALLBACK = [
 let POSTS = POSTS_FALLBACK.slice();
 
 /* ==========================================================================
-   4) HOLAT BANNERI
+   4) HOLAT (banner o'chirilgan — faqat konsolga yoziladi)
    ========================================================================== */
 function setStatus(mode){
-  const b = document.getElementById('statusBanner');
-  if (mode === 'live'){
-    b.textContent = "🟢 LIVE — Supabase'ga ulangan, ma'lumotlar saqlanmoqda";
-    b.style.background = 'var(--leaf-600)';
-  } else {
-    b.textContent = "🔌 Supabase jadvallari topilmadi — supabase_schema.sql faylini SQL Editor'da ishga tushiring. Hozircha namunaviy ma'lumotlar ko'rsatilmoqda.";
-    b.style.background = 'var(--clay-500)';
-  }
+  if (mode === 'live') console.log("🟢 Supabase'ga ulangan");
+  else console.log("🔌 Supabase jadvallari topilmadi, namunaviy ma'lumotlar ishlatilmoqda");
 }
 
 /* ==========================================================================
